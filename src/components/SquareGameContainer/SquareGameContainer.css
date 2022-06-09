@@ -5,6 +5,7 @@
     width: 100vw;
     height: 100vh;
     box-shadow: inset 0px 0px 5em 1em rgba(0,0,0,0.6);
+    overflow: hidden;
 }
 
 #timerContainer {
