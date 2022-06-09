@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "6e6014da2c78853d65de",
-    "url": "/AvoidTheSquares/static/css/main.9103733e.chunk.css"
+    "revision": "4568a5ee6bdd2ecf0110",
+    "url": "/AvoidTheSquares/static/css/main.e93580cf.chunk.css"
   },
   {
-    "revision": "6e6014da2c78853d65de",
-    "url": "/AvoidTheSquares/static/js/main.6e6014da.chunk.js"
+    "revision": "4568a5ee6bdd2ecf0110",
+    "url": "/AvoidTheSquares/static/js/main.4568a5ee.chunk.js"
   },
   {
     "revision": "f99921d68d7ebc942685",
@@ -20,7 +20,7 @@ self.__precacheManifest = [
     "url": "/AvoidTheSquares/static/js/runtime~main.ba8a0bf6.js"
   },
   {
-    "revision": "a19530b9db32f45a02560b9e71a7b5dc",
+    "revision": "23eaa3d00ca78c977a40293754c6089a",
     "url": "/AvoidTheSquares/index.html"
   }
 ];
