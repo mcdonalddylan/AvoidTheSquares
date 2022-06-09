@@ -1,6 +1,7 @@
 {
   "name": "avoid-squares",
   "version": "0.1.0",
+  "homepage": "https://mcdonalddylan.github.io/AvoidTheSquares",
   "private": true,
   "repository": {
     "type": "git",
