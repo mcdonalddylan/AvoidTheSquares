@@ -50,6 +50,22 @@ export const squareGameFunctionality = (
       materialDepth.uniforms[ 'mNear' ].value = camera.near;
       materialDepth.uniforms[ 'mFar' ].value = camera.far;
 
+      // Window Resizing
+      window.addEventListener( 'resize', onWindowResize );
+      function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				postProcessing.rtTextureDepth.setSize( window.innerWidth, window.innerHeight );
+				postProcessing.rtTextureColor.setSize( window.innerWidth, window.innerHeight );
+
+				postProcessing.bokeh_uniforms[ 'textureWidth' ].value = window.innerWidth;
+				postProcessing.bokeh_uniforms[ 'textureHeight' ].value = window.innerHeight;
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			};
+
       // Skybox
 
       // TODO: ADD TEXTURED SKYBOX FOR HIGH QUALITY
@@ -111,7 +127,7 @@ export const squareGameFunctionality = (
           let vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
           vector.unproject( camera );
           let dir = vector.sub( camera.position ).normalize();
-          let distance = - (camera.position.z) / dir.z;
+          let distance = - (camera.position.z - 400) / dir.z;
           let pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
           playerMesh.position.copy(pos);
         }

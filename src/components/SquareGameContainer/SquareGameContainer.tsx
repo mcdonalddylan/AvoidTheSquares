@@ -8,7 +8,6 @@ export const SquareGameContainer = (): ReactElement => {
 
     const [quality, setQuality] = React.useState<number>(2); // 2.5 = low quality | 1 = highest quality
     const [isMobileAspectRatio, setIsMobileAspectRatio] = React.useState(false);
-    const [refresh, setRefresh] = React.useState(false);
 
     React.useEffect(() => {
         if ( WEBGL.isWebGLAvailable() ) {
@@ -35,11 +34,6 @@ export const SquareGameContainer = (): ReactElement => {
                     document.body.removeChild( dom );
                     document.body.append( renderer.domElement );
                 } 
-            }
-            
-            window.onresize = () => {
-                renderer.setSize( window.innerWidth, window.innerHeight);
-                setRefresh(!refresh);
             };
 
             // Camera / Scene setup
