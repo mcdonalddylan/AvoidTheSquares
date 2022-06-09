@@ -1,0 +1,128 @@
+#canvas {
+    display: fixed;
+    position: absolute;
+    text-align: center;
+    width: 100vw;
+    height: 100vh;
+    box-shadow: inset 0px 0px 5em 1em rgba(0,0,0,0.6);
+}
+
+#timerContainer {
+    display: fixed;
+    position: absolute;
+    max-width: 200px;
+    margin-top: 25px;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    padding: 10px 40px;
+    z-index: 100;
+    background: rgb(30,80,150);
+    border-radius: 35px;
+    border: 5px solid rgb(240,150,50);
+    box-shadow: 0px 25px 0px -15px rgba(30, 30, 50, 0.3);
+    animation: uiEnterAni 1s ease 0s 1;
+}
+
+#timerDiv {
+    display: inline-block;
+    font-family: sans-serif;
+    font-size: 35px;
+    color: rgb(255,180,100);
+    text-shadow: 0px 2px rgb(50,50,50);
+    margin-left: 15px;
+    vertical-align: middle;
+}
+
+#timerCircleAni {
+    display: inline-block;
+    width: 35px;
+    height: 35px;
+    background: rgb(240,240,255);
+    border: 4px solid rgb(50,50,50);
+    border-radius: 50%;
+    vertical-align: middle;
+    position: relative;
+}
+
+#timerBigLineAni {
+    position: absolute;
+    width: 3px;
+    height: 13px;
+    color: rgb(50,50,50);
+    background-color: rgb(50,50,50);
+    border-radius: 5px;
+    left: 15.5px;
+    top: 4.25px;
+    transform-origin: bottom; 
+    animation: lineSpinAni 0.6s linear 0s infinite;
+}
+
+#timerSmallLineAni {
+    position: absolute;
+    width: 3px;
+    height: 7px;
+    color: rgb(50,50,50);
+    background-color: rgb(50,50,50);
+    border-radius: 5px;
+    left: 15.5px;
+    top: 10px;
+    transform-origin: bottom; 
+    animation: lineSpinAni 3s linear 0s infinite;
+}
+
+@keyframes lineSpinAni {
+    to {transform: rotate(360deg);}
+    from {transform: rotate(0deg);}
+}
+
+#instructionsText {
+    display: fixed;
+    position: absolute;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    margin-top: 125px;
+    padding: 10px 40px;
+    z-index: 100;
+    font-family: sans-serif;
+    font-size: 45px;
+    color: rgb(255,180,100);
+    text-shadow: 0px 2px rgb(30, 30, 50);
+    background-image: linear-gradient(180deg, rgba(30,80,150,0.7), rgba(15,55,95,0.7), rgba(30,80,150,0.7));
+    border-radius: 20px;
+    animation: uiEnterAni 1s ease 0s 1, instructionsBlinkAni 2s ease 0s infinite;
+}
+
+.exitDom {
+    animation: uiExitAni 1s ease 0s 1;
+}
+
+.blink {
+    animation: timeBlinkAni 2s ease 0s infinite;
+}
+
+@keyframes uiEnterAni {
+    from {transform: scale(1.2);opacity: 0;}
+    to {transform: scale(1); opacity: 1;}
+}
+
+@keyframes uiExitAni {
+    from {transform: scale(1); opacity: 1;}
+    to {transform: scale(1.2);opacity: 0;}
+}
+
+@keyframes instructionsBlinkAni {
+    0% {color: rgb(255,180,100);}
+    50% {color: white}
+    100% {color: rgb(255,180,100);}
+}
+
+@keyframes timeBlinkAni {
+    0% {opacity: 1;}
+    50% {opacity: 0;}
+    100% {opacity: 1;}
+}
