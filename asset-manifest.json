@@ -1,7 +1,7 @@
 {
   "main.css": "/AvoidTheSquares/static/css/main.9103733e.chunk.css",
-  "main.js": "/AvoidTheSquares/static/js/main.862af503.chunk.js",
-  "main.js.map": "/AvoidTheSquares/static/js/main.862af503.chunk.js.map",
+  "main.js": "/AvoidTheSquares/static/js/main.6e6014da.chunk.js",
+  "main.js.map": "/AvoidTheSquares/static/js/main.6e6014da.chunk.js.map",
   "static/js/1.f99921d6.chunk.js": "/AvoidTheSquares/static/js/1.f99921d6.chunk.js",
   "static/js/1.f99921d6.chunk.js.map": "/AvoidTheSquares/static/js/1.f99921d6.chunk.js.map",
   "static/js/2.5f6b26b8.chunk.js": "/AvoidTheSquares/static/js/2.5f6b26b8.chunk.js",
@@ -10,6 +10,6 @@
   "runtime~main.js.map": "/AvoidTheSquares/static/js/runtime~main.ba8a0bf6.js.map",
   "static/css/main.9103733e.chunk.css.map": "/AvoidTheSquares/static/css/main.9103733e.chunk.css.map",
   "index.html": "/AvoidTheSquares/index.html",
-  "precache-manifest.2748ea003650f369b4a706f0932d425f.js": "/AvoidTheSquares/precache-manifest.2748ea003650f369b4a706f0932d425f.js",
+  "precache-manifest.c03a0bc1cf3fc5806f7a21d1cabd7d0a.js": "/AvoidTheSquares/precache-manifest.c03a0bc1cf3fc5806f7a21d1cabd7d0a.js",
   "service-worker.js": "/AvoidTheSquares/service-worker.js"
 }
