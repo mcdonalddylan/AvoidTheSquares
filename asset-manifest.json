@@ -1,15 +1,15 @@
 {
-  "main.css": "/AvoidTheSquares/static/css/main.e93580cf.chunk.css",
-  "main.js": "/AvoidTheSquares/static/js/main.4568a5ee.chunk.js",
-  "main.js.map": "/AvoidTheSquares/static/js/main.4568a5ee.chunk.js.map",
-  "static/js/1.f99921d6.chunk.js": "/AvoidTheSquares/static/js/1.f99921d6.chunk.js",
-  "static/js/1.f99921d6.chunk.js.map": "/AvoidTheSquares/static/js/1.f99921d6.chunk.js.map",
-  "static/js/2.5f6b26b8.chunk.js": "/AvoidTheSquares/static/js/2.5f6b26b8.chunk.js",
-  "static/js/2.5f6b26b8.chunk.js.map": "/AvoidTheSquares/static/js/2.5f6b26b8.chunk.js.map",
-  "runtime~main.js": "/AvoidTheSquares/static/js/runtime~main.ba8a0bf6.js",
-  "runtime~main.js.map": "/AvoidTheSquares/static/js/runtime~main.ba8a0bf6.js.map",
-  "static/css/main.e93580cf.chunk.css.map": "/AvoidTheSquares/static/css/main.e93580cf.chunk.css.map",
+  "main.css": "/AvoidTheSquares/static/css/main.2ef14fa6.chunk.css",
+  "main.js": "/AvoidTheSquares/static/js/main.0e414269.chunk.js",
+  "main.js.map": "/AvoidTheSquares/static/js/main.0e414269.chunk.js.map",
+  "runtime~main.js": "/AvoidTheSquares/static/js/runtime~main.e3615423.js",
+  "runtime~main.js.map": "/AvoidTheSquares/static/js/runtime~main.e3615423.js.map",
+  "static/js/2.61a493f8.chunk.js": "/AvoidTheSquares/static/js/2.61a493f8.chunk.js",
+  "static/js/2.61a493f8.chunk.js.map": "/AvoidTheSquares/static/js/2.61a493f8.chunk.js.map",
+  "static/js/3.c70b6b5b.chunk.js": "/AvoidTheSquares/static/js/3.c70b6b5b.chunk.js",
+  "static/js/3.c70b6b5b.chunk.js.map": "/AvoidTheSquares/static/js/3.c70b6b5b.chunk.js.map",
   "index.html": "/AvoidTheSquares/index.html",
-  "precache-manifest.e65c12dad8666395299fec9e8d4af3e3.js": "/AvoidTheSquares/precache-manifest.e65c12dad8666395299fec9e8d4af3e3.js",
-  "service-worker.js": "/AvoidTheSquares/service-worker.js"
+  "precache-manifest.fc4fc59368db77821f532013c6dc62cf.js": "/AvoidTheSquares/precache-manifest.fc4fc59368db77821f532013c6dc62cf.js",
+  "service-worker.js": "/AvoidTheSquares/service-worker.js",
+  "static/css/main.2ef14fa6.chunk.css.map": "/AvoidTheSquares/static/css/main.2ef14fa6.chunk.css.map"
 }
