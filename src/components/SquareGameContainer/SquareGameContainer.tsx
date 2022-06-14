@@ -6,17 +6,26 @@ import './SquareGameContainer.css';
 
 export const SquareGameContainer = (): ReactElement => {
 
-    const [quality, setQuality] = React.useState<number>(2); // 2.5 = low quality | 1 = highest quality
+    const [quality, setQuality] = React.useState<number>(1); // 2.5 = low quality | 1 = highest quality
     const [isMobileAspectRatio, setIsMobileAspectRatio] = React.useState(false);
+
+    const toggleQuality = () => {
+        if (quality === 2.5) {
+            setQuality(1);
+        } else {
+            setQuality(2.5);
+        }
+    };
 
     React.useEffect(() => {
         if ( WEBGL.isWebGLAvailable() ) {
             
             // Renderer setup
-            let renderer = new THREE.WebGLRenderer({ antialias: false });
+            let renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true }); // needs 'alpha' to be true for CSS gradient background
             renderer.setSize( window.innerWidth, window.innerHeight);
             renderer.setPixelRatio( window.devicePixelRatio/quality );
             renderer.autoClear = false;
+            renderer.clear();
 
             if(window.innerHeight > window.innerWidth && !isMobileAspectRatio) {
                 setIsMobileAspectRatio(true);
@@ -38,8 +47,9 @@ export const SquareGameContainer = (): ReactElement => {
 
             // Camera / Scene setup
             let scene = new THREE.Scene();
-            let camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 1, 3000);
+            let camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
             camera.position.set(0, 0, 450);
+            //camera.setFocalLength(35);
 
             setupSquareGameLights( scene );
 
@@ -53,6 +63,9 @@ export const SquareGameContainer = (): ReactElement => {
 
     return (
         <div data-testid='canvas' id='canvas'>
+            <button id='qualityBtn' onClick={toggleQuality}>
+                QUALITY
+            </button>
             <div id='timerContainer'>
                 <div id='timerCircleAni'>
                     <div id='timerBigLineAni'></div>
@@ -63,6 +76,7 @@ export const SquareGameContainer = (): ReactElement => {
             <div id='instructionsContainer'>
                 <div id='instructionsText'>Avoid the Squares!</div>
             </div>
+            <div id='winLoseText'></div>
         </div>
     )
 };

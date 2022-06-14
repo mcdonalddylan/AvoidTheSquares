@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { BokehShader, BokehDepthShader } from '../../assets/shaders/BokehShader2';
+import { Tween, Easing } from '@tweenjs/tween.js';
 import { innerGlowShader } from '../../assets/shaders/miscShaders';
 import textFont from '../../assets/fonts/liera-sans-bold.json';
 import { FontLoader } from '../loadingUtils/loadingUtils';
 import { TextGeometry } from '../textRenderingUtils/textRenderingUtils';
-import { PositionalAudio } from 'three';
 
 export const setupSquareGameLights = ( scene: THREE.Scene ) => {
     let dirLight = new THREE.DirectionalLight('rgb(255,150,80)', 1);
@@ -34,10 +34,9 @@ export const squareGameFunctionality = (
 
       let materialDepth: any = {};
       let postProcessing: any = { enabled: true };
-      const shaderSettings = { rings: 4, samples: 1 };
+      const shaderSettings = { rings: 4, samples: 2 };
 
       let mouse = {x: 0, y: 0};
-      const raycaster = new THREE.Raycaster();
 
       const depthShader = BokehDepthShader;
 
@@ -67,7 +66,7 @@ export const squareGameFunctionality = (
 			};
 
       // Skybox
-
+      scene.background = new THREE.Color('rgb(18,54,89)');
       // TODO: ADD TEXTURED SKYBOX FOR HIGH QUALITY
       // const r = 'textures/cube/Bridge2/';
       // const urls = [ r + 'posx.jpg', r + 'negx.jpg',
@@ -77,20 +76,13 @@ export const squareGameFunctionality = (
 
       // scene.background = textureCube;
 
-      // const backgroundCylinderGeo = new THREE.CylinderBufferGeometry( 2, 5, 20, 32, 1, true );
-      // const backgroundMaterial = new THREE.ShaderMaterial( backgroundGradientShader );
-      // const backgroundMesh = new THREE.Mesh( backgroundCylinderGeo, backgroundMaterial );
-      // scene.add( backgroundMesh );
-
-      scene.background = new THREE.Color('rgb(20,60,100)');
-
       postProcessing = initPostprocessing( postProcessing, shaderSettings );
 
       // Player sphere creation
       let playerAcceleration = 0;
       const playerGeo = new THREE.SphereGeometry(isMobileAspectRatio ? 4 : 6, 8, 18);
       const playerMat = new THREE.MeshPhongMaterial({
-          color: 'rgb(70,180,255)',
+          color: 'rgb(23,195,230)',
           emissive: 'rgb(0,0,0)',
           specular: 'rgb(255,220,0)',
           shininess: 30,
@@ -144,6 +136,8 @@ export const squareGameFunctionality = (
       let level = 1;
       const LEVEL_1_TIME = 50;
 
+      const winLoseLevelDiv = document.getElementById('winLoseText');
+
       // Timer UI setup
       const bigHand = document.getElementById('timerBigLineAni');
       const littleHand = document.getElementById('timerSmallLineAni');
@@ -171,7 +165,7 @@ export const squareGameFunctionality = (
       moonMesh.position.set(500, 300, 0);
       moonMesh.scale.z = 0.1;
       const hillMat = new THREE.MeshPhongMaterial({
-        color: 'rgb(20,60,100)',
+        color: 'rgb(15,59,102)',
         emissive: 'rgb(0,0,0)',
         specular: 'rgb(255,230,50)',
         shininess: 2,
@@ -181,7 +175,7 @@ export const squareGameFunctionality = (
       const hillGeo = new THREE.SphereBufferGeometry(175,10,10);
       const NUM_OF_TREES = 35;
       const treeMat = new THREE.MeshPhongMaterial({
-        color: 'rgb(30,80,150)',
+        color: 'rgb(23,69,115)',
         emissive: 'rgb(0,0,0)',
         specular: 'rgb(200,180,50)',
         shininess: 1,
@@ -221,12 +215,37 @@ export const squareGameFunctionality = (
       let enemySpeed = 0.2;
       const enemyGeo = new THREE.BoxGeometry(9,9,9,1,1,1);
       enemyGeo.computeBoundingBox();
-      const enemyMat = new THREE.ShaderMaterial(innerGlowShader(enemyGeo));
+      const enemyMat = new THREE.MeshPhongMaterial({
+        color: 'rgb(230,132,34)'
+      })
       const enemyMesh = new THREE.Mesh( enemyGeo, enemyMat );
       enemyMesh.position.set(2350, 0, 400);
       scene.add( enemyMesh );
 
-      const animate = () => {
+      const enemyMatTween = new Tween(enemyMesh.material.color)
+          .to(new THREE.Color('rgb(255,210,200)'), 100)
+          .repeat(Infinity)
+          .yoyo(true)
+          .easing(Easing.Quadratic.InOut)
+          .start();
+
+      const animate = (aniTime: any) => {
+
+        // Collision detection for player and enemy
+        if(winLoseLevelDiv && bigHand && littleHand && timerDiv && !levelWin &&
+          playerMesh.position.x-3 < enemyMesh.position.x &&
+          playerMesh.position.x+3 > enemyMesh.position.x &&
+          playerMesh.position.y-3 < enemyMesh.position.y &&
+          playerMesh.position.y+3 > enemyMesh.position.y) {
+          levelLose = true;
+          console.log('COLLISION');
+          bigHand.style.animationPlayState = 'paused';
+          littleHand.style.animationPlayState = 'paused';
+          timerDiv.classList.add('blink');
+          winLoseLevelDiv.classList.add('slowUIEnter');
+          winLoseLevelDiv.innerHTML = 'Yikes. I mean you can always refresh to try again.';
+        }
+
         if(!levelLose && !levelWin) {
           // Setup timer
           delta = clock.getDelta();
@@ -235,8 +254,6 @@ export const squareGameFunctionality = (
           if (timerDiv) {
             timerDiv.innerHTML = timeText;
           };
-
-          console.log(playerMesh.position.y);
 
           // Removing the instructions UI
           if (time <= 45 && instructionsDiv && !instructionsDiv.classList.contains('exitDom')) {
@@ -259,17 +276,20 @@ export const squareGameFunctionality = (
             }
           };
 
-          if(bigHand && littleHand && Math.floor(time) <= 0) {
+          if(winLoseLevelDiv && bigHand && littleHand && Math.floor(time) <= 0) {
             levelWin = true;
             bigHand.style.animationPlayState = 'paused';
             littleHand.style.animationPlayState = 'paused';
+            winLoseLevelDiv.classList.add('slowUIEnter');
+            winLoseLevelDiv.classList.add('winningAnimation');
+            winLoseLevelDiv.innerHTML = 'You fucking won dude! Wowzers brah.\nRefresh to give it another go.';
           }
         }
 
           // Enemy movement 
           enemyDirection = Math.sign(playerMesh.position.y);
           enemyMesh.rotateZ(0.05);
-          enemyMesh.position.x -= 3;
+          enemyMesh.position.x -= 3.5;
           enemyMesh.position.y += enemyDirection*enemySpeed;
           if(enemyMesh.position.y === playerMesh.position.y ||
             (enemyDirection >= 0 ? enemyMesh.position.y > playerMesh.position.y :
@@ -280,18 +300,8 @@ export const squareGameFunctionality = (
             enemyMesh.position.x  = randomNumberRange(150,750);
           }
 
-          // Collision detection for player and enemy
-          if(bigHand && littleHand && timerDiv &&
-            playerMesh.position.x-3 < enemyMesh.position.x &&
-            playerMesh.position.x+3 > enemyMesh.position.x &&
-            playerMesh.position.y-3 < enemyMesh.position.y &&
-            playerMesh.position.y+3 > enemyMesh.position.y) {
-            levelLose = true;
-            console.log('COLLISION');
-            bigHand.style.animationPlayState = 'paused';
-            littleHand.style.animationPlayState = 'paused';
-            timerDiv.classList.add('blink');
-          }
+          // Enemy material animation
+          enemyMatTween.update(aniTime);
 
           if (levelLose) {
             playerAcceleration += 0.1;
@@ -362,7 +372,7 @@ export const squareGameFunctionality = (
         }
       };
 
-      animate();
+      requestAnimationFrame(animate);
 };
 
 
@@ -391,9 +401,25 @@ const initPostprocessing = ( postprocessing: any, shaderSettings: any ): any => 
   postprocessing.bokeh_uniforms[ 'tDepth' ].value = postprocessing.rtTextureDepth.texture;
   postprocessing.bokeh_uniforms[ 'textureWidth' ].value = window.innerWidth;
   postprocessing.bokeh_uniforms[ 'textureHeight' ].value = window.innerHeight;
+  postprocessing.bokeh_uniforms[ 'shaderFocus' ].value = false;
+  postprocessing.bokeh_uniforms[ 'fstop' ].value = 2.2;
+  //postprocessing.bokeh_uniforms[ 'maxBlur' ].value = 1.1;
+  postprocessing.bokeh_uniforms[ 'showFocus' ].value = false;
+  postprocessing.bokeh_uniforms[ 'focalDepth' ].value = 2.8;
+  postprocessing.bokeh_uniforms[ 'manualdof' ].value = false;
+  postprocessing.bokeh_uniforms[ 'vignetting' ].value = false;
+  postprocessing.bokeh_uniforms[ 'depthblur' ].value = false;
+  postprocessing.bokeh_uniforms[ 'threshold' ].value = 0.5;
+  postprocessing.bokeh_uniforms[ 'gain' ].value = 2.0;
+  postprocessing.bokeh_uniforms[ 'bias' ].value = 0.5;
+  postprocessing.bokeh_uniforms[ 'fringe' ].value = 0.7;
+  postprocessing.bokeh_uniforms[ 'focalLength' ].value = 0.7;
+  postprocessing.bokeh_uniforms[ 'noise' ].value = true;
+  postprocessing.bokeh_uniforms[ 'pentagon' ].value = false;
+  postprocessing.bokeh_uniforms[ 'dithering' ].value = 0.0001;
+
 
   postprocessing.materialBokeh = new THREE.ShaderMaterial( {
-
     uniforms: postprocessing.bokeh_uniforms,
     vertexShader: bokeh_shader.vertexShader,
     fragmentShader: bokeh_shader.fragmentShader,
@@ -401,7 +427,6 @@ const initPostprocessing = ( postprocessing: any, shaderSettings: any ): any => 
       RINGS: shaderSettings.rings,
       SAMPLES: shaderSettings.samples
     }
-
   } );
 
   postprocessing.quad = new THREE.Mesh( new THREE.PlaneGeometry( window.innerWidth, window.innerHeight ), postprocessing.materialBokeh );

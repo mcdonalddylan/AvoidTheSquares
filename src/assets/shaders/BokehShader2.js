@@ -16,14 +16,14 @@ const BokehShader = {
 		'textureWidth': { value: 1.0 },
 		'textureHeight': { value: 1.0 },
 
-		'focalDepth': { value: 1.0 },
-		'focalLength': { value: 24.0 },
-		'fstop': { value: 0.9 },
+		'focalDepth': { value: 2.8 },
+		'focalLength': { value: 25.0 },
+		'fstop': { value: 2.2 },
 
 		'tColor': { value: null },
 		'tDepth': { value: null },
 
-		'maxblur': { value: 1.0 },
+		'maxblur': { value: 1.1 },
 
 		'showFocus': { value: 0 },
 		'manualdof': { value: 0 },
