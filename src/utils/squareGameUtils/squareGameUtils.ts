@@ -5,6 +5,7 @@ import { innerGlowShader } from '../../assets/shaders/miscShaders';
 import textFont from '../../assets/fonts/liera-sans-bold.json';
 import { FontLoader } from '../loadingUtils/loadingUtils';
 import { TextGeometry } from '../textRenderingUtils/textRenderingUtils';
+import { Vector3 } from 'three';
 
 export const setupSquareGameLights = ( scene: THREE.Scene ) => {
     let dirLight = new THREE.DirectionalLight('rgb(255,150,80)', 1);
@@ -27,11 +28,12 @@ export const squareGameFunctionality = (
     quality: any,
     isMobileAspectRatio: boolean ) => {
 
+      const isHighQuality = quality === 1;
+
       let levelWin = false;
       let levelLose = false;
 
       // Bokeh DOF shader setup
-
       let materialDepth: any = {};
       let postProcessing: any = { enabled: true };
       const shaderSettings = { rings: 4, samples: 2 };
@@ -80,7 +82,7 @@ export const squareGameFunctionality = (
 
       // Player sphere creation
       let playerAcceleration = 0;
-      const playerGeo = new THREE.SphereGeometry(isMobileAspectRatio ? 4 : 6, 8, 18);
+      const playerGeo = new THREE.SphereGeometry(isMobileAspectRatio ? 4 : 6, isHighQuality ? 16 : 8, isHighQuality ? 36 : 18);
       const playerMat = new THREE.MeshPhongMaterial({
           color: 'rgb(23,195,230)',
           emissive: 'rgb(0,0,0)',
@@ -90,7 +92,9 @@ export const squareGameFunctionality = (
           refractionRatio: 0.98
       });
       let playerMesh = new THREE.Mesh( playerGeo, playerMat );
+      playerMesh.geometry.computeBoundingSphere();
       playerMesh.position.set(0,0,400);
+      let playerBoundingSphere = new THREE.Sphere(playerMesh.position, isMobileAspectRatio ? 4 : 6);
       scene.add( playerMesh );
 
       const onMouseMove = ( event: MouseEvent ) => {
@@ -160,7 +164,7 @@ export const squareGameFunctionality = (
         refractionRatio: 0
       });
       moonMat.opacity = 0.1;
-      const moonGeo = new THREE.SphereBufferGeometry(400,15,15);
+      const moonGeo = new THREE.SphereBufferGeometry(400, isHighQuality ? 30 : 15, isHighQuality ? 30 : 15);
       const moonMesh = new THREE.Mesh( moonGeo, moonMat );
       moonMesh.position.set(500, 300, 0);
       moonMesh.scale.z = 0.1;
@@ -172,7 +176,7 @@ export const squareGameFunctionality = (
         reflectivity: 0.1,
         refractionRatio: 0.1
       });
-      const hillGeo = new THREE.SphereBufferGeometry(175,10,10);
+      const hillGeo = new THREE.SphereBufferGeometry(175, isHighQuality ? 20 : 10, isHighQuality ? 20 : 10);
       const NUM_OF_TREES = 35;
       const treeMat = new THREE.MeshPhongMaterial({
         color: 'rgb(23,69,115)',
@@ -183,7 +187,7 @@ export const squareGameFunctionality = (
         refractionRatio: 0.1
       });
       let treeMeshArray: THREE.Mesh[] = [];
-      const treeGeo = new THREE.ConeGeometry(50,150,6,3);
+      const treeGeo = new THREE.ConeGeometry(50,150, isHighQuality ? 12 : 6, isHighQuality ? 6 : 3);
       const generateTrees = (): THREE.Mesh[] => {
         for(let i = 0; i < NUM_OF_TREES; i++) {
           const tempTreeMesh = new THREE.Mesh( treeGeo, treeMat );
@@ -220,6 +224,8 @@ export const squareGameFunctionality = (
       })
       const enemyMesh = new THREE.Mesh( enemyGeo, enemyMat );
       enemyMesh.position.set(2350, 0, 400);
+      let enemyBoundingBox = new THREE.Box3(new Vector3, new Vector3);
+      enemyBoundingBox.setFromObject(enemyMesh);
       scene.add( enemyMesh );
 
       const enemyMatTween = new Tween(enemyMesh.material.color)
@@ -231,22 +237,26 @@ export const squareGameFunctionality = (
 
       const animate = (aniTime: any) => {
 
-        // Collision detection for player and enemy
-        if(winLoseLevelDiv && bigHand && littleHand && timerDiv && !levelWin &&
-          playerMesh.position.x-3 < enemyMesh.position.x &&
-          playerMesh.position.x+3 > enemyMesh.position.x &&
-          playerMesh.position.y-3 < enemyMesh.position.y &&
-          playerMesh.position.y+3 > enemyMesh.position.y) {
-          levelLose = true;
-          console.log('COLLISION');
-          bigHand.style.animationPlayState = 'paused';
-          littleHand.style.animationPlayState = 'paused';
-          timerDiv.classList.add('blink');
-          winLoseLevelDiv.classList.add('slowUIEnter');
-          winLoseLevelDiv.innerHTML = 'Yikes. I mean you can always refresh to try again.';
+        if(playerMesh.geometry.boundingSphere && !levelLose){
+          console.log('bounding box?: ', !!enemyMesh.geometry.boundingBox);
+          console.log(enemyBoundingBox.distanceToPoint(playerBoundingSphere.center));
+          console.log(!!enemyBoundingBox.intersectsSphere(playerBoundingSphere));
         }
-
+        
         if(!levelLose && !levelWin) {
+
+          // Collision detection for player and enemy
+          if(winLoseLevelDiv && bigHand && littleHand && timerDiv && !levelWin && playerMesh.geometry.boundingSphere &&
+            enemyBoundingBox.intersectsSphere(playerBoundingSphere)) {
+            levelLose = true;
+            console.log('COLLISION');
+            bigHand.style.animationPlayState = 'paused';
+            littleHand.style.animationPlayState = 'paused';
+            timerDiv.classList.add('blink');
+            winLoseLevelDiv.classList.add('slowUIEnter');
+            winLoseLevelDiv.innerHTML = randomLoseMessage();
+          }
+
           // Setup timer
           delta = clock.getDelta();
           time -= (speed * delta);
@@ -276,20 +286,21 @@ export const squareGameFunctionality = (
             }
           };
 
+          // Winning trigger logic
           if(winLoseLevelDiv && bigHand && littleHand && Math.floor(time) <= 0) {
             levelWin = true;
             bigHand.style.animationPlayState = 'paused';
             littleHand.style.animationPlayState = 'paused';
             winLoseLevelDiv.classList.add('slowUIEnter');
             winLoseLevelDiv.classList.add('winningAnimation');
-            winLoseLevelDiv.innerHTML = 'You fucking won dude! Wowzers brah.\nRefresh to give it another go.';
+            winLoseLevelDiv.innerHTML = randomWinMessage();
           }
         }
 
           // Enemy movement 
           enemyDirection = Math.sign(playerMesh.position.y);
           enemyMesh.rotateZ(0.05);
-          enemyMesh.position.x -= 3.5;
+          enemyMesh.position.x -= isMobileAspectRatio ? 4.5 : 3;
           enemyMesh.position.y += enemyDirection*enemySpeed;
           if(enemyMesh.position.y === playerMesh.position.y ||
             (enemyDirection >= 0 ? enemyMesh.position.y > playerMesh.position.y :
@@ -298,6 +309,10 @@ export const squareGameFunctionality = (
           }
           if(enemyMesh.position.x <= -250) {
             enemyMesh.position.x  = randomNumberRange(150,750);
+          }
+          // Have the enemy bounding box follow the enemy's position
+          if (enemyMesh.geometry.boundingBox) {
+            enemyBoundingBox.copy( enemyMesh.geometry.boundingBox ).applyMatrix4( enemyMesh.matrixWorld );
           }
 
           // Enemy material animation
@@ -455,4 +470,26 @@ const smoothstep = ( near: number, far: number, depth: number ) => {
 
 const saturate = ( x: number ) => {
   return Math.max( 0, Math.min( 1, x ) );
+};
+
+const randomLoseMessage = (): string => {
+  const randomNum = Math.floor(randomNumberRange(0,4));
+  const loseMessages = [
+    'Yikes. I mean you can always refresh to try again.',
+    'Uh ooooh. Refresh time?',
+    'That\'s a bummer my guy. Refresh?',
+    'Yeah, you better refresh dude. That suckssss'
+  ];
+  return loseMessages[randomNum];
+};
+
+const randomWinMessage = (): string => {
+  const randomNum = Math.floor(randomNumberRange(0,4));
+  const winMessages = [
+    'You fucking won dude!\nRefresh to give it another go.',
+    'Wowzers brah!/nI\'m feeling a refresh comming on.',
+    'Ho boi! Dats what\'s up. Refresh?',
+    'Wiener gogeener shliener man!\nRefresh tiiiime.'
+  ];
+  return winMessages[randomNum];
 };

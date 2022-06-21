@@ -69,6 +69,7 @@ export const SquareGameContainer = (): ReactElement => {
             <div id='timerContainer'>
                 <div id='timerCircleAni'>
                     <div id='timerBigLineAni'></div>
+                    <div id='timerMiddleDot'></div>
                     <div id='timerSmallLineAni'></div>
                 </div>
                 <div id='timerDiv'></div>

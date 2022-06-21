@@ -82,6 +82,17 @@ body {
     animation: lineSpinAni 0.6s linear 0s infinite;
 }
 
+#timerMiddleDot {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    color: rgb(64,58,51);
+    background-color: rgb(64,58,51);
+    border-radius: 50%;
+    left: 15.5px;
+    top: 15.5px;
+}
+
 #timerSmallLineAni {
     position: absolute;
     width: 3px;
@@ -108,7 +119,7 @@ body {
     margin-right: auto;
     left: 0;
     right: 0;
-    margin-top: 125px;
+    margin-top: 200px;
     padding: 10px 40px;
     z-index: 100;
     font-family: sans-serif;
@@ -123,15 +134,15 @@ body {
 #winLoseText {
     display: fixed;
     position: absolute;
-    max-width: 550px;
+    max-width: 400px;
     margin-left: auto;
     margin-right: auto;
     left: 0;
     right: 0;
-    margin-top: 125px;
-    font-size: 45px;
+    margin-top: 250px;
+    font-size: 40px;
     color: rgb(255,140,25);
-    text-shadow: 0px 2px rgb(30, 30, 50);
+    text-shadow: 0px 3px rgb(30, 30, 50);
     border: 0;
 }
 
