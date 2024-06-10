@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { BokehShader, BokehDepthShader } from '../../assets/shaders/BokehShader2';
-import { Tween, Easing } from '@tweenjs/tween.js';
-import { innerGlowShader } from '../../assets/shaders/miscShaders';
-import textFont from '../../assets/fonts/liera-sans-bold.json';
-import { FontLoader } from '../loadingUtils/loadingUtils';
-import { TextGeometry } from '../textRenderingUtils/textRenderingUtils';
 import { Vector3 } from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
+import { Tween, Easing } from '@tweenjs/tween.js';
 
 export const setupSquareGameLights = ( scene: THREE.Scene ) => {
     let dirLight = new THREE.DirectionalLight('rgb(255,150,80)', 1);
@@ -26,30 +26,14 @@ export const squareGameFunctionality = (
     renderer: any,
     camera: THREE.PerspectiveCamera,
     quality: any,
-    isMobileAspectRatio: boolean ) => {
+    isMobileAspectRatio: boolean) => {
 
       const isHighQuality = quality === 1;
 
       let levelWin = false;
       let levelLose = false;
 
-      // Bokeh DOF shader setup
-      let materialDepth: any = {};
-      let postProcessing: any = { enabled: true };
-      const shaderSettings = { rings: 4, samples: 2 };
-
       let mouse = {x: 0, y: 0};
-
-      const depthShader = BokehDepthShader;
-
-      materialDepth = new THREE.ShaderMaterial( {
-          uniforms: depthShader.uniforms,
-          vertexShader: depthShader.vertexShader,
-          fragmentShader: depthShader.fragmentShader
-      } );
-
-      materialDepth.uniforms[ 'mNear' ].value = camera.near;
-      materialDepth.uniforms[ 'mFar' ].value = camera.far;
 
       // Window Resizing
       window.addEventListener( 'resize', onWindowResize );
@@ -57,12 +41,6 @@ export const squareGameFunctionality = (
 
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
-
-				postProcessing.rtTextureDepth.setSize( window.innerWidth, window.innerHeight );
-				postProcessing.rtTextureColor.setSize( window.innerWidth, window.innerHeight );
-
-				postProcessing.bokeh_uniforms[ 'textureWidth' ].value = window.innerWidth;
-				postProcessing.bokeh_uniforms[ 'textureHeight' ].value = window.innerHeight;
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			};
@@ -78,7 +56,18 @@ export const squareGameFunctionality = (
 
       // scene.background = textureCube;
 
-      postProcessing = initPostprocessing( postProcessing, shaderSettings );
+      // Depth of Field and Bloom effect setup
+      const composer = new EffectComposer( renderer );
+      const basicRenderPass = new RenderPass( scene, camera );
+      composer.addPass( basicRenderPass );
+      if (quality === 1) {
+        const bokehPass = new BokehPass( scene, camera, { focus: 50, aperture: 0.005, maxblur: 0.02 });
+        composer.addPass(bokehPass);
+        const bloomPass = new UnrealBloomPass( new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.09, 0.09);
+        composer.addPass(bloomPass);
+      }
+      const outputPass = new OutputPass();
+      composer.addPass( outputPass );
 
       // Player sphere creation
       let playerAcceleration = 0;
@@ -93,9 +82,12 @@ export const squareGameFunctionality = (
       });
       let playerMesh = new THREE.Mesh( playerGeo, playerMat );
       playerMesh.geometry.computeBoundingSphere();
-      playerMesh.position.set(0,0,400);
+      playerMesh.position.set(0,0,-50);
       let playerBoundingSphere = new THREE.Sphere(playerMesh.position, isMobileAspectRatio ? 4 : 6);
       scene.add( playerMesh );
+      console.log('camera pos z: ', camera.position.z);
+      console.log('player pos z', playerMesh.position.z);
+      console.log('distance z: ', camera.position.z - playerMesh.position.z);
 
       const onMouseMove = ( event: MouseEvent ) => {
           event.preventDefault();
@@ -107,7 +99,7 @@ export const squareGameFunctionality = (
             let vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
             vector.unproject( camera );
             let dir = vector.sub( camera.position ).normalize();
-            let distance = - (camera.position.z - 400) / dir.z;
+            let distance = - (camera.position.z + 50) / dir.z;
             let pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
             playerMesh.position.copy(pos);
           }
@@ -123,7 +115,7 @@ export const squareGameFunctionality = (
           let vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
           vector.unproject( camera );
           let dir = vector.sub( camera.position ).normalize();
-          let distance = - (camera.position.z - 400) / dir.z;
+          let distance = - (camera.position.z + 50) / dir.z;
           let pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
           playerMesh.position.copy(pos);
         }
@@ -164,9 +156,9 @@ export const squareGameFunctionality = (
         refractionRatio: 0
       });
       moonMat.opacity = 0.1;
-      const moonGeo = new THREE.SphereBufferGeometry(400, isHighQuality ? 30 : 15, isHighQuality ? 30 : 15);
+      const moonGeo = new THREE.SphereGeometry(400, isHighQuality ? 30 : 15, isHighQuality ? 30 : 15);
       const moonMesh = new THREE.Mesh( moonGeo, moonMat );
-      moonMesh.position.set(500, 300, 0);
+      moonMesh.position.set(500, 300, -400);
       moonMesh.scale.z = 0.1;
       const hillMat = new THREE.MeshPhongMaterial({
         color: 'rgb(15,59,102)',
@@ -176,7 +168,7 @@ export const squareGameFunctionality = (
         reflectivity: 0.1,
         refractionRatio: 0.1
       });
-      const hillGeo = new THREE.SphereBufferGeometry(175, isHighQuality ? 20 : 10, isHighQuality ? 20 : 10);
+      const hillGeo = new THREE.SphereGeometry(175, isHighQuality ? 20 : 10, isHighQuality ? 20 : 10);
       const NUM_OF_TREES = 35;
       const treeMat = new THREE.MeshPhongMaterial({
         color: 'rgb(23,69,115)',
@@ -191,23 +183,23 @@ export const squareGameFunctionality = (
       const generateTrees = (): THREE.Mesh[] => {
         for(let i = 0; i < NUM_OF_TREES; i++) {
           const tempTreeMesh = new THREE.Mesh( treeGeo, treeMat );
-          tempTreeMesh.position.set(-2000+(i*randomNumberRange(70,140)),-150+(Math.random()*30),200);
+          tempTreeMesh.position.set(-2000+(i*randomNumberRange(70,140)),-150+(Math.random()*30),-200);
           treeMeshArray.push(tempTreeMesh);
         }
         return treeMeshArray;
       };
       treeMeshArray = generateTrees();
       let hill1Mesh = new THREE.Mesh( hillGeo, hillMat );
-      hill1Mesh.position.set(-300,-175,100);
+      hill1Mesh.position.set(-300,-175,-300);
       hill1Mesh.scale.set(1.2,1.5,0.4);
       let hill2Mesh = new THREE.Mesh( hillGeo, hillMat );
-      hill2Mesh.position.set(0,-250,100);
+      hill2Mesh.position.set(0,-250,-300);
       hill2Mesh.scale.set(1.2,1.5,0.4);
       let hill3Mesh = new THREE.Mesh( hillGeo, hillMat );
-      hill3Mesh.position.set(600,-175,100);
+      hill3Mesh.position.set(600,-175,-300);
       hill3Mesh.scale.set(1.2,1.5,0.4);
       let hill4Mesh = new THREE.Mesh( hillGeo, hillMat );
-      hill4Mesh.position.set(900,-250,100);
+      hill4Mesh.position.set(900,-250,-300);
       hill4Mesh.scale.set(1.2,1.5,0.4);
       
 
@@ -223,7 +215,7 @@ export const squareGameFunctionality = (
         color: 'rgb(230,132,34)'
       })
       const enemyMesh = new THREE.Mesh( enemyGeo, enemyMat );
-      enemyMesh.position.set(2350, 0, 400);
+      enemyMesh.position.set(2350, 0, -50);
       let enemyBoundingBox = new THREE.Box3(new Vector3, new Vector3);
       enemyBoundingBox.setFromObject(enemyMesh);
       scene.add( enemyMesh );
@@ -237,10 +229,10 @@ export const squareGameFunctionality = (
 
       const animate = (aniTime: any) => {
 
-        if(playerMesh.geometry.boundingSphere && !levelLose){
-          console.log('bounding box?: ', !!enemyMesh.geometry.boundingBox);
-          console.log(enemyBoundingBox.distanceToPoint(playerBoundingSphere.center));
-          console.log(!!enemyBoundingBox.intersectsSphere(playerBoundingSphere));
+        if(playerMesh.geometry.boundingSphere && !levelLose) {
+          //console.log('bounding box?: ', !!enemyMesh.geometry.boundingBox);
+          //console.log(enemyBoundingBox.distanceToPoint(playerBoundingSphere.center));
+          //console.log(!!enemyBoundingBox.intersectsSphere(playerBoundingSphere));
         }
         
         if(!levelLose && !levelWin) {
@@ -353,123 +345,15 @@ export const squareGameFunctionality = (
           }
 
           requestAnimationFrame(animate);
-          render();	
-      };
 
-      // Render function babyyyyy
-      const render = () => {
-        if ( postProcessing.enabled ) {
-
-					renderer.clear();
-
-					// render scene into texture
-					renderer.setRenderTarget( postProcessing.rtTextureColor );
-					renderer.clear();
-					renderer.render( scene, camera );
-
-					// render depth into texture
-
-					scene.overrideMaterial = materialDepth;
-					renderer.setRenderTarget( postProcessing.rtTextureDepth );
-					renderer.clear();
-					renderer.render( scene, camera );
-					scene.overrideMaterial = null;
-
-					// render bokeh composite
-
-					renderer.setRenderTarget( null );
-					renderer.render( postProcessing.scene, postProcessing.camera );
-          renderer.render( scene, camera );
-        } else {
-          scene.overrideMaterial = null;
-					renderer.setRenderTarget( null );
-          renderer.render( scene, camera );
-        }
+          composer.render();
       };
 
       requestAnimationFrame(animate);
 };
 
-
-
 const randomNumberRange = (min: number, max: number) => { 
   return Math.random() * (max - min) + min;
-};
-
-const initPostprocessing = ( postprocessing: any, shaderSettings: any ): any => {
-
-  postprocessing.scene = new THREE.Scene();
-
-  postprocessing.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 10000, 10000 );
-  postprocessing.camera.position.z = 100;
-
-  postprocessing.scene.add( postprocessing.camera );
-
-  postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight );
-  postprocessing.rtTextureColor = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight );
-
-  const bokeh_shader = BokehShader;
-
-  postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone( bokeh_shader.uniforms );
-
-  postprocessing.bokeh_uniforms[ 'tColor' ].value = postprocessing.rtTextureColor.texture;
-  postprocessing.bokeh_uniforms[ 'tDepth' ].value = postprocessing.rtTextureDepth.texture;
-  postprocessing.bokeh_uniforms[ 'textureWidth' ].value = window.innerWidth;
-  postprocessing.bokeh_uniforms[ 'textureHeight' ].value = window.innerHeight;
-  postprocessing.bokeh_uniforms[ 'shaderFocus' ].value = false;
-  postprocessing.bokeh_uniforms[ 'fstop' ].value = 2.2;
-  //postprocessing.bokeh_uniforms[ 'maxBlur' ].value = 1.1;
-  postprocessing.bokeh_uniforms[ 'showFocus' ].value = false;
-  postprocessing.bokeh_uniforms[ 'focalDepth' ].value = 2.8;
-  postprocessing.bokeh_uniforms[ 'manualdof' ].value = false;
-  postprocessing.bokeh_uniforms[ 'vignetting' ].value = false;
-  postprocessing.bokeh_uniforms[ 'depthblur' ].value = false;
-  postprocessing.bokeh_uniforms[ 'threshold' ].value = 0.5;
-  postprocessing.bokeh_uniforms[ 'gain' ].value = 2.0;
-  postprocessing.bokeh_uniforms[ 'bias' ].value = 0.5;
-  postprocessing.bokeh_uniforms[ 'fringe' ].value = 0.7;
-  postprocessing.bokeh_uniforms[ 'focalLength' ].value = 0.7;
-  postprocessing.bokeh_uniforms[ 'noise' ].value = true;
-  postprocessing.bokeh_uniforms[ 'pentagon' ].value = false;
-  postprocessing.bokeh_uniforms[ 'dithering' ].value = 0.0001;
-
-
-  postprocessing.materialBokeh = new THREE.ShaderMaterial( {
-    uniforms: postprocessing.bokeh_uniforms,
-    vertexShader: bokeh_shader.vertexShader,
-    fragmentShader: bokeh_shader.fragmentShader,
-    defines: {
-      RINGS: shaderSettings.rings,
-      SAMPLES: shaderSettings.samples
-    }
-  } );
-
-  postprocessing.quad = new THREE.Mesh( new THREE.PlaneGeometry( window.innerWidth, window.innerHeight ), postprocessing.materialBokeh );
-  postprocessing.quad.position.z = - 500;
-  postprocessing.scene.add( postprocessing.quad );
-
-  return postprocessing;
-};
-
-const shaderUpdate = ( postprocessing: any, shaderSettings: any ) => {
-  postprocessing.materialBokeh.defines.RINGS = shaderSettings.rings;
-  postprocessing.materialBokeh.defines.SAMPLES = shaderSettings.samples;
-  postprocessing.materialBokeh.needsUpdate = true;
-};
-
-const linearize = ( camera: THREE.PerspectiveCamera, depth: number ) => {
-  const zfar = camera.far;
-  const znear = camera.near;
-  return - zfar * znear / ( depth * ( zfar - znear ) - zfar );
-};
-
-const smoothstep = ( near: number, far: number, depth: number ) => {
-  const x = saturate( ( depth - near ) / ( far - near ) );
-  return x * x * ( 3 - 2 * x );
-};
-
-const saturate = ( x: number ) => {
-  return Math.max( 0, Math.min( 1, x ) );
 };
 
 const randomLoseMessage = (): string => {
@@ -486,10 +370,10 @@ const randomLoseMessage = (): string => {
 const randomWinMessage = (): string => {
   const randomNum = Math.floor(randomNumberRange(0,4));
   const winMessages = [
-    'You fucking won dude!\nRefresh to give it another go.',
-    'Wowzers brah!/nI\'m feeling a refresh comming on.',
+    'You fucking won dude! Refresh to give it another go.',
+    'Wowzers brah! I\'m feeling a refresh comming on.',
     'Ho boi! Dats what\'s up. Refresh?',
-    'Wiener gogeener shliener man!\nRefresh tiiiime.'
+    'Wiener gogeener shliener man! Refresh tiiiime.'
   ];
   return winMessages[randomNum];
 };

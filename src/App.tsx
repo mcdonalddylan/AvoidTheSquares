@@ -5,7 +5,7 @@ import { SquareGameContainer } from './components/SquareGameContainer/SquareGame
 function App() {
   return (
     <div className="App">
-      <SquareGameContainer />
+      <SquareGameContainer key={0} />
     </div>
   );
 }

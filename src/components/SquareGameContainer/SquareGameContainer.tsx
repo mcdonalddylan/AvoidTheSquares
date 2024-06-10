@@ -18,6 +18,7 @@ export const SquareGameContainer = (): ReactElement => {
     };
 
     React.useEffect(() => {
+        // This runs twice when running this locally, but only once when you build or deploy the code.
         if ( WEBGL.isWebGLAvailable() ) {
             
             // Renderer setup
@@ -48,7 +49,7 @@ export const SquareGameContainer = (): ReactElement => {
             // Camera / Scene setup
             let scene = new THREE.Scene();
             let camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 3000);
-            camera.position.set(0, 0, 450);
+            camera.position.set(0, 0, 0);
             //camera.setFocalLength(35);
 
             setupSquareGameLights( scene );
@@ -59,7 +60,7 @@ export const SquareGameContainer = (): ReactElement => {
             const warning = WEBGL.getWebGLErrorMessage();
             document.body.appendChild( warning );
         }
-    });
+    }, [quality]);
 
     return (
         <div data-testid='canvas' id='canvas'>
