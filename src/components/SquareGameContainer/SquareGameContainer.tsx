@@ -7,7 +7,6 @@ import './SquareGameContainer.css';
 export const SquareGameContainer = (): ReactElement => {
 
     const [quality, setQuality] = React.useState<number>(1); // 2.5 = low quality | 1 = highest quality
-    const [isMobileAspectRatio, setIsMobileAspectRatio] = React.useState(false);
 
     const toggleQuality = () => {
         if (quality === 2.5) {
@@ -28,10 +27,11 @@ export const SquareGameContainer = (): ReactElement => {
             renderer.autoClear = false;
             renderer.clear();
 
-            if(window.innerHeight > window.innerWidth && !isMobileAspectRatio) {
-                setIsMobileAspectRatio(true);
-            } else if (window.innerHeight <= window.innerWidth && isMobileAspectRatio) {
-                setIsMobileAspectRatio(false);
+            let isMobileAspectRatio = false;
+            console.log('window height: ', window.innerHeight)
+            console.log('window width: ', window.innerWidth)
+            if(window.innerHeight > window.innerWidth) {
+                isMobileAspectRatio = true;
             }
 
             renderer.domElement.id = 'dom';

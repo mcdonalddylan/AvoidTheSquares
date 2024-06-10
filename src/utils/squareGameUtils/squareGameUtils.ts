@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { Vector3 } from 'three';
+import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
 import { Tween, Easing } from '@tweenjs/tween.js';
+import { bokehChanger } from '../guiUtils/guiUtils';
 
 export const setupSquareGameLights = ( scene: THREE.Scene ) => {
     let dirLight = new THREE.DirectionalLight('rgb(255,150,80)', 1);
@@ -57,17 +59,32 @@ export const squareGameFunctionality = (
       // scene.background = textureCube;
 
       // Depth of Field and Bloom effect setup
+      const params = {
+        focus: 49,
+        aperature: 0.005,
+        maxBlur: 0.01
+      };
+      const bokehPass = new BokehPass( scene, camera, { focus: params.focus, aperture: params.aperature, maxblur: params.maxBlur });
       const composer = new EffectComposer( renderer );
       const basicRenderPass = new RenderPass( scene, camera );
+      // TODO: Setup a slider to dynamically check the focus distance to figure out the issue there.
       composer.addPass( basicRenderPass );
       if (quality === 1) {
-        const bokehPass = new BokehPass( scene, camera, { focus: 50, aperture: 0.005, maxblur: 0.02 });
         composer.addPass(bokehPass);
         const bloomPass = new UnrealBloomPass( new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.09, 0.09);
         composer.addPass(bloomPass);
       }
       const outputPass = new OutputPass();
       composer.addPass( outputPass );
+
+      // set up gui
+      if (!isMobileAspectRatio) {
+        const gui = new GUI();
+        gui.add( params, 'focus', 0.0, 400.0, 0.5).onChange(() => bokehChanger(bokehPass, 'focus', params.focus));
+        gui.add( params, 'aperature', 0.0, 1.0, 0.001).onChange(() => bokehChanger(bokehPass, 'aperture', params.aperature));
+        gui.add( params, 'maxBlur', 0.0, 0.05, 0.001).onChange(() => bokehChanger(bokehPass, 'maxblur', params.maxBlur));
+        gui.close();
+      }
 
       // Player sphere creation
       let playerAcceleration = 0;
@@ -83,6 +100,7 @@ export const squareGameFunctionality = (
       let playerMesh = new THREE.Mesh( playerGeo, playerMat );
       playerMesh.geometry.computeBoundingSphere();
       playerMesh.position.set(0,0,-50);
+      playerMesh.scale.z = 0.15;
       let playerBoundingSphere = new THREE.Sphere(playerMesh.position, isMobileAspectRatio ? 4 : 6);
       scene.add( playerMesh );
       console.log('camera pos z: ', camera.position.z);
@@ -155,10 +173,15 @@ export const squareGameFunctionality = (
         reflectivity: 0,
         refractionRatio: 0
       });
+      let moonXPos = 500;
+      if (isMobileAspectRatio) {    
+        moonXPos = 375;
+      }
+      console.log('moon x pos: ', moonXPos);
       moonMat.opacity = 0.1;
       const moonGeo = new THREE.SphereGeometry(400, isHighQuality ? 30 : 15, isHighQuality ? 30 : 15);
       const moonMesh = new THREE.Mesh( moonGeo, moonMat );
-      moonMesh.position.set(500, 300, -400);
+      moonMesh.position.set(moonXPos, 300, -400);
       moonMesh.scale.z = 0.1;
       const hillMat = new THREE.MeshPhongMaterial({
         color: 'rgb(15,59,102)',
@@ -208,7 +231,10 @@ export const squareGameFunctionality = (
 
       // Enemy AI Setup
       let enemyDirection = 1;
-      let enemySpeed = 0.2;
+      let enemySpeed = 0.15;
+      if (isMobileAspectRatio) {
+        enemySpeed = 0.005;
+      }
       const enemyGeo = new THREE.BoxGeometry(9,9,9,1,1,1);
       enemyGeo.computeBoundingBox();
       const enemyMat = new THREE.MeshPhongMaterial({
@@ -216,6 +242,7 @@ export const squareGameFunctionality = (
       })
       const enemyMesh = new THREE.Mesh( enemyGeo, enemyMat );
       enemyMesh.position.set(2350, 0, -50);
+      enemyMesh.scale.z = 0.15;
       let enemyBoundingBox = new THREE.Box3(new Vector3, new Vector3);
       enemyBoundingBox.setFromObject(enemyMesh);
       scene.add( enemyMesh );
@@ -299,8 +326,11 @@ export const squareGameFunctionality = (
               enemyMesh.position.y < playerMesh.position.y)) {
             enemyMesh.position.y = playerMesh.position.y;
           }
-          if(enemyMesh.position.x <= -250) {
+          if(enemyMesh.position.x <= -250 && !levelWin && !levelLose) {
             enemyMesh.position.x  = randomNumberRange(150,750);
+          }
+          else if (enemyMesh.position.x <= -250 && (levelLose || levelLose)) {
+            enemyMesh.position.x = -249;
           }
           // Have the enemy bounding box follow the enemy's position
           if (enemyMesh.geometry.boundingBox) {
@@ -346,7 +376,7 @@ export const squareGameFunctionality = (
 
           requestAnimationFrame(animate);
 
-          composer.render();
+          composer.render( 0.1 ); // 0.1 is the delta time value
       };
 
       requestAnimationFrame(animate);
