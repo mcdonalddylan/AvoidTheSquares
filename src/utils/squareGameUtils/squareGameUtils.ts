@@ -4,6 +4,8 @@ import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+import { VignetteShader } from 'three/examples/jsm/shaders/VignetteShader';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass';
 import { Tween, Easing } from '@tweenjs/tween.js';
@@ -58,7 +60,7 @@ export const squareGameFunctionality = (
 
       // scene.background = textureCube;
 
-      // Depth of Field and Bloom effect setup
+      // Depth of Field, Bloom and Vignette effect setup
       const params = {
         focus: 49,
         aperature: 0.005,
@@ -67,12 +69,15 @@ export const squareGameFunctionality = (
       const bokehPass = new BokehPass( scene, camera, { focus: params.focus, aperture: params.aperature, maxblur: params.maxBlur });
       const composer = new EffectComposer( renderer );
       const basicRenderPass = new RenderPass( scene, camera );
-      // TODO: Setup a slider to dynamically check the focus distance to figure out the issue there.
       composer.addPass( basicRenderPass );
       if (quality === 1) {
         composer.addPass(bokehPass);
         const bloomPass = new UnrealBloomPass( new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.09, 0.09);
         composer.addPass(bloomPass);
+        const vignettePass = new ShaderPass( VignetteShader );
+        vignettePass.uniforms["offset"].value = 0.7;
+        vignettePass.uniforms["darkness"].value = 1.1;
+        composer.addPass(vignettePass);
       }
       const outputPass = new OutputPass();
       composer.addPass( outputPass );
